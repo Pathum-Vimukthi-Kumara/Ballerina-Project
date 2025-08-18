@@ -16,6 +16,7 @@ import BlogPage from './pages/Blog'
 import ContactPage from './pages/Contact'
 import EventsPage from './pages/Events'
 import FAQsPage from './pages/FAQs'
+import Login from './pages/Login'
 import LearnMorePage from './pages/LearnMore'
 import OrganizationsPage from './pages/Organizations'
 import VolunteerResourcesPage from './pages/VolunteerResources'
@@ -94,6 +95,7 @@ function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/faqs" element={<FAQsPage />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/learn-more" element={<LearnMorePage />} />
         <Route path="/volunteer-resources" element={<VolunteerResourcesPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
