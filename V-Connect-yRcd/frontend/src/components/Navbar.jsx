@@ -22,59 +22,26 @@ const Navbar = ({ scrollY }) => {
       }
     }
 
-    // Add a small delay before adding the event listener to prevent immediate closing
-    let timeoutId;
-    if (isMenuOpen) {
-      timeoutId = setTimeout(() => {
-        document.addEventListener('click', handleClickOutside)
-      }, 100)
-    }
-    
+    document.addEventListener('click', handleClickOutside)
     return () => {
       document.removeEventListener('click', handleClickOutside)
-      clearTimeout(timeoutId)
     }
   }, [isMenuOpen])
 
-  // Handle scrolling to top for home button
-  const handleScrollToTop = (event) => {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    
-    setTimeout(() => {
-      setIsMenuOpen(false);
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    }, 10);
-  }
-
   // Handle nav item click - navigate to home page section or smooth scroll
-  const handleNavClick = (id, event) => {
-    // Prevent default behavior to avoid any conflicts
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+  const handleNavClick = (id) => {
+    setIsMenuOpen(false)
     
-    // Close the menu with a slight delay to ensure the click is processed first
-    setTimeout(() => {
-      setIsMenuOpen(false);
-      
-      if (isHomePage) {
-        // If we're already on the home page, just scroll to the section
-        const element = document.getElementById(id)
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' })
-        }
-      } else {
-        // If we're on another page, navigate to home with the section hash
-        navigate(`/#${id}`)
+    if (isHomePage) {
+      // If we're already on the home page, just scroll to the section
+      const element = document.getElementById(id)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
       }
-    }, 10);
+    } else {
+      // If we're on another page, navigate to home with the section hash
+      navigate(`/#${id}`)
+    }
   }
 
   return (
@@ -95,30 +62,22 @@ const Navbar = ({ scrollY }) => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-12">
-          <a 
-            onClick={(e) => isHomePage ? handleScrollToTop(e) : navigate('/')} 
-            className={`text-dark hover:text-primary cursor-pointer transition-colors font-bold ${location.pathname === '/' ? 'text-primary' : ''}`}
-          >
-            Home
-          </a>
-          <a onClick={(e) => handleNavClick('about', e)} className="text-dark hover:text-primary cursor-pointer transition-colors font-bold">About</a>
-          <a onClick={(e) => handleNavClick('how-to-use', e)} className="text-dark hover:text-primary cursor-pointer transition-colors font-bold">How It Works</a>
-          <a onClick={(e) => handleNavClick('testimonials', e)} className="text-dark hover:text-primary cursor-pointer transition-colors font-bold">Testimonials</a>
+          <Link to="/" className={`text-dark hover:text-primary cursor-pointer transition-colors font-bold ${location.pathname === '/' ? 'text-primary' : ''}`}>Home</Link>
+          <a onClick={() => handleNavClick('about')} className="text-dark hover:text-primary cursor-pointer transition-colors font-bold">About</a>
+          <a onClick={() => handleNavClick('how-to-use')} className="text-dark hover:text-primary cursor-pointer transition-colors font-bold">How It Works</a>
+          <a onClick={() => handleNavClick('testimonials')} className="text-dark hover:text-primary cursor-pointer transition-colors font-bold">Testimonials</a>
         </nav>
 
         {/* CTA Buttons */}
         <div className="hidden md:flex items-center space-x-4">
           <button onClick={() => handleNavClick('donations')} className="btn-outline">Donate</button>
-          <Link to="/login" className="btn-primary">Log In</Link>
+          <button className="btn-primary">Log In</button>
         </div>
 
         {/* Mobile Menu Button */}
         <button 
           className="md:hidden text-dark p-2 menu-button" 
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsMenuOpen(!isMenuOpen);
-          }}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
         >
           {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -132,21 +91,15 @@ const Navbar = ({ scrollY }) => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          onClick={(e) => e.stopPropagation()}
         >
           <nav className="flex flex-col space-y-4">
-            <a 
-              onClick={(e) => isHomePage ? handleScrollToTop(e) : navigate('/')}
-              className="text-dark hover:text-primary cursor-pointer px-4 py-2 hover:bg-gray-50 rounded-md font-bold"
-            >
-              Home
-            </a>
-            <a onClick={(e) => handleNavClick('about', e)} className="text-dark hover:text-primary cursor-pointer px-4 py-2 hover:bg-gray-50 rounded-md font-bold">About</a>
-            <a onClick={(e) => handleNavClick('how-to-use', e)} className="text-dark hover:text-primary cursor-pointer px-4 py-2 hover:bg-gray-50 rounded-md font-bold">How It Works</a>
-            <a onClick={(e) => handleNavClick('testimonials', e)} className="text-dark hover:text-primary cursor-pointer px-4 py-2 hover:bg-gray-50 rounded-md font-bold">Testimonials</a>
+            <Link to="/" className="text-dark hover:text-primary cursor-pointer px-4 py-2 hover:bg-gray-50 rounded-md font-bold">Home</Link>
+            <a onClick={() => handleNavClick('about')} className="text-dark hover:text-primary cursor-pointer px-4 py-2 hover:bg-gray-50 rounded-md font-bold">About</a>
+            <a onClick={() => handleNavClick('how-to-use')} className="text-dark hover:text-primary cursor-pointer px-4 py-2 hover:bg-gray-50 rounded-md font-bold">How It Works</a>
+            <a onClick={() => handleNavClick('testimonials')} className="text-dark hover:text-primary cursor-pointer px-4 py-2 hover:bg-gray-50 rounded-md font-bold">Testimonials</a>
             <div className="flex flex-col space-y-2 pt-2 border-t border-gray-100">
               <Link to="/donations" className="btn-outline w-full text-center">Donate</Link>
-              <Link to="/login" className="btn-primary w-full text-center">Log In</Link>
+              <button className="btn-primary w-full">Log In</button>
             </div>
           </nav>
         </motion.div>

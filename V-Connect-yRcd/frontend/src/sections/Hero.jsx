@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
 
 const Hero = () => {
   return (
@@ -56,27 +55,23 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.4 }}
             >
-            <Link to="/login?type=volunteer" className="w-full sm:w-[320px]">
-              <motion.button
-                  className="btn-primary text-lg px-8 py-3 w-full text-center"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-              >
-                  Sign up as an Individual
-              </motion.button>
-            </Link>
+            <motion.button
+                className="btn-primary text-lg px-8 py-3 w-full sm:w-[320px] text-center"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+            >
+                Sign up as an Individual
+            </motion.button>
 
-            <Link to="/login?type=organization" className="w-full sm:w-[320px]">
-              <motion.button
-                  className="btn-outline text-lg px-8 py-3 w-full text-center"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-              >
-                  Sign up as an Organization
-              </motion.button>
-            </Link>
+            <motion.button
+                className="btn-outline text-lg px-8 py-3 w-full sm:w-[320px] text-center"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+            >
+                Sign up as an Organization
+            </motion.button>
             </motion.div>
 
           </motion.div>

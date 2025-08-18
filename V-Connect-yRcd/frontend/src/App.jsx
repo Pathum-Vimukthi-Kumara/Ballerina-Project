@@ -21,10 +21,6 @@ import OrganizationsPage from './pages/Organizations'
 import VolunteerResourcesPage from './pages/VolunteerResources'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsOfService from './pages/TermsOfService'
-import Login from './pages/Login'
-import AdminDashboard from './pages/AdminDashboard'
-import OrganizationDashboard from './pages/OrganizationDashboard'
-import VolunteerDashboard from './pages/VolunteerDashboard'
 
 // Home page component for the main landing page
 const HomePage = () => {
@@ -102,10 +98,6 @@ function App() {
         <Route path="/volunteer-resources" element={<VolunteerResourcesPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/organization-dashboard" element={<OrganizationDashboard />} />
-        <Route path="/volunteer-dashboard" element={<VolunteerDashboard />} />
       </Routes>
     </Router>
   )

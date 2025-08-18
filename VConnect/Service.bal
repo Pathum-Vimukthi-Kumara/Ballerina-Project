@@ -62,6 +62,27 @@ function setCORSHeaders(http:Response res) {
 }
 
 service /api/org on mainListener {
+    // List all donation requests for the authenticated organization
+    resource function get donation_requests(http:Caller caller, http:Request req) returns error? {
+        error? vErr = validateAuth(req, caller); if vErr is error { return; }
+        // Extract org id from JWT
+        string authHeader = check req.getHeader("Authorization");
+        string jwtToken = authHeader.substring(7);
+        jwt:Payload|jwt:Error v = jwt:validate(jwtToken, validatorConfig);
+        if v is jwt:Error { http:Response r = new; setCORSHeaders(r); r.statusCode = http:STATUS_UNAUTHORIZED; r.setJsonPayload({"error": v.message()}); return caller->respond(r); }
+        jwt:Payload payload = <jwt:Payload>v;
+        anydata? typeJ = payload["user_type"];
+        anydata? idJ = payload["user_id"];
+        int orgId = -1;
+        if idJ is int { orgId = idJ; }
+        else if idJ is string { int|error parsed = 'int:fromString(idJ); if parsed is int { orgId = parsed; } }
+        if !(typeJ is string) || typeJ != "organization" || orgId < 0 { http:Response r = new; setCORSHeaders(r); r.statusCode = http:STATUS_FORBIDDEN; r.setJsonPayload({"error": "Organization access required"}); return caller->respond(r); }
+        DonationRequest[] list = check listDonationRequests(orgId);
+        http:Response r = new;
+        setCORSHeaders(r);
+        r.setJsonPayload(list);
+        return caller->respond(r);
+    }
     // Explicit CORS preflight handler for /events
     resource function options events(http:Caller caller, http:Request req) returns error? {
         http:Response res = new;
@@ -113,11 +134,24 @@ service /api/org on mainListener {
 
     resource function get profile/[int id](http:Caller caller, http:Request req) returns error? {
         error? vErr = validateAuth(req, caller);
-    if vErr is error { return; }
-    error? ownErr = ensureOrgOrAdmin(req, id);
-    if ownErr is error { http:Response r = new; r.statusCode = http:STATUS_FORBIDDEN; r.setJsonPayload({"error": (<error>ownErr).message()}); return caller->respond(r); }
+        if vErr is error {
+            http:Response r = new;
+            setCORSHeaders(r);
+            r.statusCode = http:STATUS_UNAUTHORIZED;
+            r.setJsonPayload({"error": (<error>vErr).message()});
+            return caller->respond(r);
+        }
+        error? ownErr = ensureOrgOrAdmin(req, id);
+        if ownErr is error {
+            http:Response r = new;
+            setCORSHeaders(r);
+            r.statusCode = http:STATUS_FORBIDDEN;
+            r.setJsonPayload({"error": (<error>ownErr).message()});
+            return caller->respond(r);
+        }
         // Auto-create if missing
-        OrgProfile|error p = ensureOrgProfile(id);
+        OrgProfile|error|() p = ensureOrgProfile(id);
+        http:Response r = new;
         if p is OrgProfile {
             OrgEvent[] evts = [];
             OrgEvent[]|error evRes = getOrgEvents(id);
@@ -130,13 +164,24 @@ service /api/org on mainListener {
                 is_verified: p.is_verified,
                 events: evts
             };
-            return caller->respond(resp);
+            setCORSHeaders(r);
+            r.setJsonPayload(resp);
+            return caller->respond(r);
+        } else if p is error {
+            string msg = (<error>p).message();
+            setCORSHeaders(r);
+            r.statusCode = http:STATUS_INTERNAL_SERVER_ERROR;
+            r.setJsonPayload({"error": msg});
+            return caller->respond(r);
+        } else {
+            // p is () or unexpected value
+            setCORSHeaders(r);
+            r.statusCode = http:STATUS_NOT_FOUND;
+            r.setJsonPayload({"error": "Organization profile not found"});
+            return caller->respond(r);
         }
-        string msg = (<error>p).message();
-        http:Response r = new; r.statusCode = http:STATUS_INTERNAL_SERVER_ERROR; r.setJsonPayload({"error": msg});
-        return caller->respond(r);
-    }
-    resource function post profile(OrgProfile body, http:Caller caller, http:Request req) returns error? {
+   }
+    resource function post createOrganizationProfile(OrgProfile body, http:Caller caller, http:Request req) returns error? {
         error? vErr = validateAuth(req, caller);
         if vErr is error {
             http:Response r = new;
@@ -148,15 +193,23 @@ service /api/org on mainListener {
         // body.organization_id MUST match caller org id unless caller is admin
         if body.organization_id is int {
             error? ownErr = ensureOrgOrAdmin(req, <int>body.organization_id);
-            if ownErr is error { http:Response r = new; r.statusCode = http:STATUS_FORBIDDEN; r.setJsonPayload({"error": (<error>ownErr).message()}); return caller->respond(r); }
+            if ownErr is error {
+                http:Response r = new;
+                r.statusCode = http:STATUS_FORBIDDEN;
+                r.setJsonPayload({"error": (<error>ownErr).message()});
+                return caller->respond(r);
+            }
         }
         string|error res = createOrgProfile(body);
-        if res is string { return caller->respond({message: res}); }
+        if res is string {
+            return caller->respond({message: res});
+        }
         http:Response r = new;
         r.statusCode = http:STATUS_BAD_REQUEST;
         r.setJsonPayload({"error": res.message()});
         return caller->respond(r);
     }
+    
     resource function put profile/[int id](OrgProfile body, http:Caller caller, http:Request req) returns error? {
         error? vErr = validateAuth(req, caller);
         if vErr is error { return; }
@@ -218,9 +271,27 @@ service /api/org on mainListener {
     }
     resource function post events(EventCreateRequest body, http:Caller caller, http:Request req) returns error? {
         error? vErr = validateAuth(req, caller);
-        if vErr is error { return; }
-        OrgEvent created = check createOrgEvent(body);
-        check caller->respond(created);
+        if vErr is error {
+            http:Response r = new;
+            setCORSHeaders(r);
+            r.statusCode = http:STATUS_UNAUTHORIZED;
+            r.setJsonPayload({"error": (<error>vErr).message()});
+            return caller->respond(r);
+        }
+        OrgEvent|error created = createOrgEvent(body);
+        if created is OrgEvent {
+            http:Response r = new;
+            setCORSHeaders(r);
+            r.statusCode = http:STATUS_CREATED;
+            r.setJsonPayload(created);
+            return caller->respond(r);
+        } else {
+            http:Response r = new;
+            setCORSHeaders(r);
+            r.statusCode = http:STATUS_BAD_REQUEST;
+            r.setJsonPayload({"error": (<error>created).message()});
+            return caller->respond(r);
+        }
     }
     resource function put events/[int event_id](EventCreateRequest body, http:Caller caller, http:Request req) returns error? {
         error? vErr = validateAuth(req, caller);

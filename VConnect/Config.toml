@@ -1,10 +1,10 @@
 JWT_SECRET = "your-256-bit-secret"
 
 [dbConfig]
-host = "bep43hvig5fe97aqfk4l-mysql.services.clever-cloud.com"
-port = 3306
-name = "bep43hvig5fe97aqfk4l"
-user = "uu5yqx2pogorlhsx"
-password = "xhkFqq83YMaoW0bfpF91"
+user="uhqksvuk66o0cb94"
+password="Vo57RyCoCbXm3Iiloj66"
+host="bpwoq9itspvyqwdlrffe-mysql.services.clever-cloud.com"
+port=3306
+name="bpwoq9itspvyqwdlrffe"
 
 
